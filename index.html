@@ -15,6 +15,13 @@
         .drop-zone { border: 2px dashed #ccc; transition: 0.3s; }
         .drop-zone--over { border-color: var(--azul); background: #f0f4f8; }
         html { scroll-behavior: smooth; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
@@ -111,12 +118,57 @@
                             </div>
                         </div>
                     </div>
-                    
+<!--BOTÓN DE ENVIAR SOLICITUD-->                    
                     <button type="submit" id="btnSubmit" class="w-full bg-azul text-white py-4 rounded-xl font-black text-xl hover:bg-black transition-all shadow-lg hover:-translate-y-1">
                         ENVIAR INSCRIPCIÓN
                     </button>
                     <p id="msg" class="text-center font-bold mt-4"></p>
                 </form>
+                <div id="resumenInscripcion" class="hidden space-y-6 animate-fade-in">
+    <div class="text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 text-green-600 rounded-full mb-4">
+            <i class="fas fa-check-double text-3xl"></i>
+        </div>
+        <h3 class="text-3xl font-black text-azul uppercase italic">¡Inscripción Recibida!</h3>
+        <p class="text-gray-600 mt-2">Estos son los datos que hemos registrado en el club:</p>
+    </div>
+<!-- MENSAJE RESUMEN DEL CONTENIDO DE LA INSCRIPCIÓN-->
+    <div class="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-azul/20 grid md:grid-cols-2 gap-4 text-sm">
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Jugador/a</span>
+            <span id="res-nombre" class="text-azul font-black text-lg">-</span>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Fecha de Nacimiento</span>
+            <span id="res-fecha" class="text-azul font-bold">-</span>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Email de contacto</span>
+            <span id="res-email" class="text-azul font-bold">-</span>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Teléfono</span>
+            <span id="res-tel" class="text-azul font-bold">-</span>
+        </div>
+        <div class="md:col-span-2 p-3 bg-white rounded-lg shadow-sm">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Dirección</span>
+            <span id="res-dir" class="text-azul font-bold">-</span>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm border-l-4 border-amarillo">
+            <span class="block text-gray-400 uppercase text-xs font-bold">Edad Actual</span>
+            <span id="res-edad" class="text-azul font-black text-lg">- años</span>
+        </div>
+        <div class="p-3 bg-azul text-white rounded-lg shadow-sm">
+            <span class="block text-gray-200 uppercase text-xs font-bold">Categoría Barbarians</span>
+            <span id="res-categoria" class="text-amarillo font-black text-lg italic uppercase">-</span>
+        </div>
+    </div>
+    <div class="flex justify-center mt-8">
+        <button onclick="window.location.reload()" class="bg-azul text-white px-8 py-3 rounded-xl font-bold hover:bg-amarillo hover:text-azul transition uppercase">
+            Realizar otra inscripción
+        </button>
+    </div>
+</div>
             </div>
         </div>
     </section>
@@ -247,7 +299,8 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             const msg = document.getElementById('msg');
-            const URL_SCRIPT = "TU_URL_DE_APPS_SCRIPT_AQUI"; // RECUERDA CAMBIAR ESTO
+            //URL APPSCRIPT DRIVE
+            const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxgpM0utRLy80EyfTLFkm6V3nVObl_VpnE2KOmfJ5S77WFXJ6nEHeUhiBaOHtgcuXLo/exec";
 
             // Validación de archivos obligatorios
             if (document.getElementById('inputFoto').files.length === 0 || 
@@ -295,11 +348,49 @@
                     body: JSON.stringify(datosEnvio)
                 });
 
-                msg.innerHTML = `<div class="bg-green-100 text-green-800 p-4 rounded-xl border border-green-200">¡Inscripción enviada con éxito! Revisa tu email.</div>`;
-                btn.innerText = "¡ENVIADO!";
-                e.target.reset();
-                document.querySelectorAll('.drop-zone span').forEach(s => s.innerText = "Arrastra aquí o haz click");
-            } catch (error) {
+            //COMPROBACIÓN DE EDAD PARA EL CÁLCULO DE SU CATEGORÍA
+            const fechaNacimiento = new Date(formData.get('fechaNacimiento'));
+            const añoNacimiento = fechaNacimiento.getFullYear();
+            const añoActual = new Date().getFullYear();
+            const edadPura = añoActual - añoNacimiento; // Edad que cumple este año
+
+            let categoria = "";
+
+            if (edadPura < 6) categoria = "Escoleta / Sub-6";
+            else if (edadPura < 8)  categoria = "Sub-8";
+            else if (edadPura < 10) categoria = "Sub-10";
+            else if (edadPura < 12) categoria = "Sub-12";
+            else if (edadPura < 14) categoria = "Sub-14";
+            else if (edadPura < 16) categoria = "Sub-16";
+            else if (edadPura < 18) categoria = "Sub-18";
+            else categoria = "Senior";
+
+            //OCULTAR EL FORMULARIO
+            document.getElementById('rugbyForm').classList.add('hidden');
+
+            
+            
+            //RELLENAR LOS DATOS EN EL RESUMEN (USAMOS LOS DATOS DE FORMDATA)
+
+            document.getElementById('res-nombre').innerText = `${formData.get('nombre')} ${formData.get('apellido1')} ${formData.get('apellido2')}`;
+            document.getElementById('res-fecha').innerText = formData.get('fechaNacimiento');
+            document.getElementById('res-email').innerText = formData.get('email');
+            document.getElementById('res-tel').innerText = formData.get('telefono');
+            document.getElementById('res-dir').innerText = formData.get('direccion');
+
+            //RELLENAMOS LOS DATOS CALCULADOS
+            document.getElementById('res-edad').innerText = edadPura + " años";
+            document.getElementById('res-categoria').innerText = categoria;
+
+            
+            //MOSTRAMOS EL RESUMEN DEL JUGADOR
+            const resumen = document.getElementById('resumenInscripcion');
+            resumen.classList.remove('hidden');
+            
+            //HACER SCROLL HASTA EL TÍTULO MOSTRANDO EL ÉXITO
+            resumen.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+        
+        } catch (error) {
                 console.error(error);
                 msg.innerText = "Error en el envío. Contacta con el club.";
                 btn.disabled = false;
